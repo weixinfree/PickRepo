@@ -1,0 +1,55 @@
+#! /usr/bin/env python3
+import requests
+from hashlib import md5
+import shutil
+from pathlib import Path
+import os
+from subprocess import check_call
+from functools import partial
+
+BASE = Path(__file__).parent / 'images'
+print(BASE)
+
+def _download(url: str) -> str:
+    file_name = 'tmp_' + md5(url.encode('utf-8')).hexdigest()
+    try:
+        rsp = requests.get(url).content
+        with open(file_name, mode='wb') as f:
+            f.write(rsp)
+
+        return file_name
+    except Exception as e:
+        raise SystemExit(-1, e)
+
+def _clear():
+    for f in Path('.').glob('tmp_*'):
+        print('remove tmpfile: ', f)
+        os.remove(f)
+        
+
+class PicRepo:
+
+    def add(self, name: str, url: str = None):
+        file: Path = None
+        if url:
+            _file = _download(url)
+            file = Path(_file)
+        elif Path(name).exists():
+            file = Path(name)
+
+        dst = BASE / name
+
+        shutil.copyfile(file, dst)
+        _clear()
+
+        os.chdir(BASE.parent)
+        sh = partial(check_call, shell=True)
+        sh(f'git add -r {BASE}')
+        sh(f'git commit -m "add new images"')
+        sh(f'git push')
+
+
+if __name__ == "__main__":
+    import fire
+    fire.Fire(PicRepo)
+    # _download('http://baidu.com')
