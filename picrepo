@@ -8,7 +8,6 @@ from subprocess import check_call
 from functools import partial
 
 BASE = Path(__file__).parent / 'images'
-print(BASE)
 
 def _download(url: str) -> str:
     file_name = 'tmp_' + md5(url.encode('utf-8')).hexdigest() + '.png'
@@ -44,11 +43,12 @@ class PicRepo:
 
         os.chdir(BASE.parent)
         sh = partial(check_call, shell=True)
-        sh(f'git add {BASE}/')
-        sh(f'git commit -m "add new images"')
-        sh(f'git push')
+        sh(f'git add {BASE}/ 2>/dev/null')
+        sh(f'git commit -m "add new images" 2>/dev/null')
+        sh(f'git push 2>/dev/null')
 
-        print('url: ', f'https://raw.githubusercontent.com/weixinfree/PickRepo/master/images/{dst}')
+        print()
+        print(f'![{name}](https://raw.githubusercontent.com/weixinfree/PickRepo/master/images/{name})')
 
 
 if __name__ == "__main__":
